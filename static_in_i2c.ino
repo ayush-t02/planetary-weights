@@ -4,9 +4,9 @@
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 //SoftwareSerial knob_input(10, 11);
-double weight = 90.78;
+double weight = 110.78;
 float ans;
-int knob;
+int knob, fans;
 
 void setup()
 {
@@ -29,7 +29,15 @@ void loop()
             lcd.setCursor(0, 0);
             lcd.print("Mars: ");
             lcd.setCursor(0, 1);
-            lcd.print(ans, 2);
+            fans = (int)(ans);
+            
+            if (fans < 100) {
+              lcd.print(ans, 2);
+              lcd.setCursor(5, 1);
+              lcd.print("  ");
+            } else {
+              lcd.print(fans);
+            }
             lcd.setCursor(6,0);
             lcd.print("        ");
         }
@@ -39,15 +47,34 @@ void loop()
             lcd.setCursor(0, 0);
             lcd.print("Saturn: ");
             lcd.setCursor(0, 1);
-            lcd.print(ans, 2);
+            fans = (int)(ans);
+            
+            if (fans < 100) {
+              lcd.print(ans, 2);
+              lcd.setCursor(5, 1);
+              lcd.print("  ");
+            } else {
+              lcd.print(fans);
+            }
+            lcd.setCursor(6,0);
+            lcd.print("        ");
         }
+        
         if ((knob > 400) && (knob <= 600))
         {
             ans = weight * 0.166;
             lcd.setCursor(0, 0);
             lcd.print("Moon: ");
             lcd.setCursor(0, 1);
-            lcd.print(ans, 2);
+            fans = (int)(ans);
+            
+            if (fans < 100) {
+              lcd.print(ans, 2);
+              lcd.setCursor(5, 1);
+              lcd.print("  ");
+            } else {
+              lcd.print(fans);
+            }
             lcd.setCursor(6,0);
             lcd.print("        ");
         }
@@ -57,15 +84,36 @@ void loop()
             lcd.setCursor(0, 0);
             lcd.print("Mercury: ");
             lcd.setCursor(0, 1);
-            lcd.print(ans, 2);
+            fans = (int)(ans);
+
+            if (fans < 100) {
+              lcd.print(ans, 2);
+              lcd.setCursor(5, 1);
+              lcd.print("  ");
+            } else {
+              lcd.print(fans);
+            }
+            lcd.setCursor(3,1);
+            lcd.print("  ");
         }
+        
         if ((knob > 800) && (knob <= 1000))
         {
             ans = weight * 1.19;
             lcd.setCursor(0, 0);
             lcd.print("Neptune: ");
             lcd.setCursor(0, 1);
-            lcd.print(ans, 2);
+            fans = (int)(ans);
+
+            if (fans < 100) {
+              lcd.print(ans, 2);
+              lcd.setCursor(5, 1);
+              lcd.print("  ");
+            } else {
+              lcd.print(fans);
+            }
+            lcd.setCursor(3,1);
+            lcd.print("  ");
         }
     }
 }
