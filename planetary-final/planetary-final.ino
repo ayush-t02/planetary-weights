@@ -1,6 +1,6 @@
 /*
-Installation:
-Arduino Uno      P10 Panel
+  Installation:
+  Arduino Uno      P10 Panel
     13 ---------> S / CLK
     11 ---------> R
      9 ---------> nOE / OE
@@ -8,27 +8,29 @@ Arduino Uno      P10 Panel
      7 ---------> B
      6 ---------> A
    GND ---------> GND
------------------------------------------------------------------------------------------------------------------------------------------
-Load cell installation 
- 2 -> HX711 CLK
- 3 -> DOUT
- 5V -> VCC
- GND -> GND
+  -----------------------------------------------------------------------------------------------------------------------------------------
+  Load cell installation
+  2 -> HX711 CLK
+  3 -> DOUT
+  5V -> VCC
+  GND -> GND
 */
 
-#include <SPI.h>       
-#include <DMD.h>    
-#include <TimerOne.h>  
+#include <SPI.h>
+#include <DMD.h>
+#include <TimerOne.h>
 #include <SoftwareSerial.h>
 #include "Arial_black_16.h"
 #include "Arial_Black_16_ISO_8859_1.h"
 #include "Arial14.h"
 #include "SystemFont5x7.h"
 #include "HX711.h"
+#include <HX711_ADC.h>
 
+#define FONT Arial_Black_16
 #define DISPLAYS_ACROSS 1 //-> Number of P10 panels used, side to side.
 #define DISPLAYS_DOWN 1
-#define calibration_factor -12.0
+#define calibration_factor -12.20
 
 #define LOADCELL_DOUT_PIN  3
 #define LOADCELL_SCK_PIN  2
@@ -38,7 +40,7 @@ HX711 scale(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
 char *Text = "";
 char chr[5];
-int knob = 0; 
+int knob = 0;
 double load, fload;
 int value = A0;
 
@@ -46,76 +48,107 @@ int value = A0;
 // on the Mega, use other pins instead, since 8 and 9 don't work on the Mega
 //SoftwareSerial potentiometer(4, 5);
 
-void ScanDMD() { 
+void ScanDMD()
+{
   dmd.scanDisplayBySPI();
 }
 
-void setup(void) {
-  Timer1.initialize(2000);          
-  Timer1.attachInterrupt(ScanDMD);   
-  dmd.clearScreen(true);   
+void setup(void)
+{
+  Timer1.initialize(5000);
+  Timer1.attachInterrupt(ScanDMD);
+  dmd.clearScreen(true);
   Serial.begin(9600);
   scale.set_scale(calibration_factor);
   scale.tare();
+  //  scale.setReverseOutput();
 }
 
-void loop(void) {
-  load = scale.get_units(), 10;
-  knob = analogRead(value);
-  Serial.print(knob);
-  
- while (knob > 0) {
-    if ((knob > 0) && (knob <= 300))
-    {
-      fload = load * 27.01;
-      dmd.selectFont(SystemFont5x7);
-      Text = "SUN:";
-      dmd.drawMarquee(Text,strlen(Text),(32*DISPLAYS_ACROSS)-1,0);
-      long start = millis();
-      long timming = start;
-      boolean flag = false;
-      while (!flag)
-      {
-        if ((timming + 20) < millis())
-        {
-          flag = dmd.stepMarquee(-1, 0);
-          timming = millis();
-        }
-      }
-      dtostrf(fload, 3, 2, chr);
-      dmd.drawString( 0, 9, chr, 4, GRAPHICS_NORMAL );
+void drawText( String dispString )
+{
+  dmd.clearScreen( true );
+  dmd.selectFont( SystemFont5x7 );
+  char newString[256];
+  int sLength = dispString.length();
+  dispString.toCharArray( newString, sLength + 1 );
+  dmd.drawMarquee( newString , sLength , ( 32 * DISPLAYS_ACROSS ) - 1 , 0);
+  long start = millis();
+  long timer = start;
+  long timer2 = start;
+  boolean ret = false;
+  while ( !ret ) {
+    if ( ( timer + 150 ) < millis() ) {
+      ret = dmd.stepMarquee( -1 , 0 );
+      timer = millis();
     }
-    if ((knob > 300) && (knob <= 600))
+  }
+}
+
+void loop(void)
+{
+  while (true)
+  {
+    load = scale.get_units(), 10;
+    knob = analogRead(value);
+    Serial.print(knob);
+
+    if (knob == 0)
     {
-      fload = load * 0.38;
       dmd.selectFont(SystemFont5x7);
-      dmd.drawString(0,0, "MERCURY: ", 4, GRAPHICS_NORMAL);
-      dtostrf(fload, 3, 2, chr);
-      dmd.drawString( 0, 9, chr, 4, GRAPHICS_NORMAL );
+      drawText("Move: ");
+      fload = (-1) * (load * 27.01);
+      String loadstr = String(fload);
+      drawText(loadstr);
     }
-    if ((knob > 600) && (knob <= 900))
+    if ((knob > 0) && (knob <= 100))
     {
-      fload = load * 0.166;
+      fload = (-1) * (load * 27.01);
+      Serial.println(fload);
       dmd.selectFont(SystemFont5x7);
-      dmd.drawString(0,0, "MOON: ", 4, GRAPHICS_NORMAL);
+      dmd.drawString(0, 0, "SUN:   ", 8, GRAPHICS_NORMAL);
       dtostrf(fload, 3, 2, chr);
-      dmd.drawString( 0, 9, chr, 4, GRAPHICS_NORMAL );
+      dmd.drawString( 0, 9, chr, 8, GRAPHICS_NORMAL );
+      //delay(5000);
     }
-    if ((knob > 900) && (knob <= 1200))
+    if ((knob > 100) && (knob <= 200))
     {
-      fload = load * 2.34;
+      fload = (-1) * (load * 0.38);
+      Serial.println(fload);
       dmd.selectFont(SystemFont5x7);
-      dmd.drawString(0,0, "JUPITER: ", 4, GRAPHICS_NORMAL);
+      dmd.drawString(0, 0, "MERCURY:", 8, GRAPHICS_NORMAL);
       dtostrf(fload, 3, 2, chr);
-      dmd.drawString( 0, 9, chr, 4, GRAPHICS_NORMAL );
+      dmd.drawString( 0, 9, chr, 8, GRAPHICS_NORMAL );
+      //delay(5000);
     }
-    if ((knob > 1200) && (knob <= 1500))
+    if ((knob > 200) && (knob <= 300))
     {
-      fload = load * 1.19;
+      fload = (-1) * (load * 0.166);
+      Serial.println(fload);
       dmd.selectFont(SystemFont5x7);
-      dmd.drawString(0,0, "NEPTUNE: ", 4, GRAPHICS_NORMAL);
+      dmd.drawString(0, 0, "MOON:   ", 8, GRAPHICS_NORMAL);
       dtostrf(fload, 3, 2, chr);
-      dmd.drawString( 0, 9, chr, 4, GRAPHICS_NORMAL );
+      dmd.drawString( 0, 9, chr, 8, GRAPHICS_NORMAL );
+      //delay(5000);
+    }
+    if ((knob > 300) && (knob <= 400))
+    {
+      fload = (-1) * (load * 2.34);
+      Serial.println(fload);
+      dmd.selectFont(SystemFont5x7);
+      dmd.drawString(0, 0, "JUPITER:", 8, GRAPHICS_NORMAL);
+      dtostrf(fload, 3, 2, chr);
+      dmd.drawString( 0, 9, chr, 8, GRAPHICS_NORMAL );
+      //delay(5000);
+    }
+    if ((knob > 400) && (knob <= 500))
+    {
+      fload = (-1) * (load * 1.19);
+      Serial.println(fload);
+      dmd.selectFont(SystemFont5x7);
+      dmd.drawString(0, 0, "NEPTUNE:", 8, GRAPHICS_NORMAL);
+      dtostrf(fload, 3, 2, chr);
+      dmd.drawString( 0, 9, chr, 8, GRAPHICS_NORMAL );
+      //delay(5000);
     }
   }
 }
